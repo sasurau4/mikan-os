@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "*.embeddedhtml": "html",
+        "stddef.h": "c",
+        "simplefilesystem.h": "c",
+        "loadedimage.h": "c",
+        "diskio2.h": "c",
+        "blockio.h": "c"
+    },
+}
