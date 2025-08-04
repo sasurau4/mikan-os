@@ -21,3 +21,7 @@ sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang++-18 1
 sudo update-alternatives --install /usr/bin/lld-link lld-link /usr/bin/lld-link-18 1
 sudo update-alternatives --install /usr/bin/llvm-lib llvm-lib /usr/bin/llvm-lib-18 1
 ```
+
+### How to debug with gdb
+
+https://qiita.com/ktamido/items/2e25d505d475933dcd91
