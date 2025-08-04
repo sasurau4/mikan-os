@@ -6,6 +6,14 @@ If you want to create mikan-os, go to https://github.com/uchan-nos/mikanos and b
 
 - LLVM 18
 
+### Install tools
+
+```
+sudo apt install okteta
+apt-get install qemu-system
+bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
+```
+
 ### Setup update-alternatives
 
 ```
