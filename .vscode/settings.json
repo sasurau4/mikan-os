@@ -5,6 +5,7 @@
         "simplefilesystem.h": "c",
         "loadedimage.h": "c",
         "diskio2.h": "c",
-        "blockio.h": "c"
+        "blockio.h": "c",
+        "elf.hpp": "c"
     },
 }
