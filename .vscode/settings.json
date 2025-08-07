@@ -6,6 +6,7 @@
         "loadedimage.h": "c",
         "diskio2.h": "c",
         "blockio.h": "c",
-        "elf.hpp": "c"
+        "elf.hpp": "c",
+        "cstddef": "cpp"
     },
 }
