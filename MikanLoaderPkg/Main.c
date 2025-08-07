@@ -352,9 +352,9 @@ EFI_STATUS EFIAPI UefiMain(
     // #@@range_end(get_entry_point)
 
     // #@@range_begin(call_kernel)
-    typedef void EntryPointType(void);
+    typedef void EntryPointType(UINT64, UINT64);
     EntryPointType *entry_point = (EntryPointType *)entry_addr;
-    entry_point();
+    entry_point(gop->Mode->FrameBufferBase, gop->Mode->FrameBufferSize);
     // #@@range_end(call_kernel)
 
     Print(L"All done\n");
