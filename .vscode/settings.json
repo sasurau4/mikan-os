@@ -9,6 +9,8 @@
         "elf.hpp": "c",
         "cstddef": "cpp",
         "types.h": "c",
-        "cstdlib": "c"
+        "cstdlib": "c",
+        "functional": "cpp",
+        "new": "cpp"
     },
 }
