@@ -28,6 +28,7 @@ public:
         kInvalidPhase,
         kUnknownXHCISpeedID,
         kNoWaiter,
+        kNoPCIMSI,
         kLastOfCode, // This should be the last code in the enum
     };
 
@@ -81,6 +82,7 @@ private:
         "kInvalidPhase",
         "kUnknownXHCISpeedID",
         "kNoWaiter",
+        "kNoPCIMSI",
     };
     static_assert(Error::Code::kLastOfCode == code_names_.size());
 

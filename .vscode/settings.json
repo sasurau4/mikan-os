@@ -11,6 +11,8 @@
         "types.h": "c",
         "cstdlib": "c",
         "functional": "cpp",
-        "new": "cpp"
+        "new": "cpp",
+        "cstdint": "cpp",
+        "array": "cpp"
     },
 }

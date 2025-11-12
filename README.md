@@ -22,6 +22,19 @@ sudo update-alternatives --install /usr/bin/lld-link lld-link /usr/bin/lld-link-
 sudo update-alternatives --install /usr/bin/llvm-lib llvm-lib /usr/bin/llvm-lib-18 1
 ```
 
+### Build and run
+
+```bash
+cd ./kernel
+source ../devenv/buildenv.fish
+make
+```
+
+Other terminal from repo root
+```
+env QEMU_OPTS="-s" ./devenv/run_qemu.sh ../../tianocore/edk2/Build/MikanLoaderX64/DEBUG_CLANGPDB/X64/Loader.efi ./kernel/kernel.elf
+```
+
 ### How to debug with gdb
 
 https://qiita.com/ktamido/items/2e25d505d475933dcd91
