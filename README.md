@@ -24,14 +24,28 @@ sudo update-alternatives --install /usr/bin/llvm-lib llvm-lib /usr/bin/llvm-lib-
 
 ### Build and run
 
+#### For Boot loader
+
+```bash
+cd ../../tianocore/edk2
+bash
+source edksetup.sh
+build
+```
+
+#### For kernel
+
 ```bash
 cd ./kernel
 source ../devenv/buildenv.fish
 make
 ```
 
+#### Run
+
 Other terminal from repo root
-```
+
+```bash
 env QEMU_OPTS="-s" ./devenv/run_qemu.sh ../../tianocore/edk2/Build/MikanLoaderX64/DEBUG_CLANGPDB/X64/Loader.efi ./kernel/kernel.elf
 ```
 
