@@ -353,12 +353,10 @@ EFI_STATUS EFIAPI UefiMain(
     }
     // #@@range_end(pass_frame_buffer_config)
 
-    // #@@range_begin(call_kernel)
     typedef void __attribute((sysv_abi)) EntryPointType(const struct FrameBufferConfig *,
                                                         const struct MemoryMap *);
     EntryPointType *entry_point = (EntryPointType *)entry_addr;
     entry_point(&config, &memmap);
-    // #@@range_end(call_kernel)
 
     Print(L"All done\n");
 
