@@ -6,7 +6,7 @@ std::new_handler std::get_new_handler() noexcept
     return nullptr;
 }
 
-extern "C" int posix_memalign(void **, size_t, size_t)
+extern "C" int posix_memalign(void **, std::size_t, std::size_t)
 {
     return ENOMEM;
 }
