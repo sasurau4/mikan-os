@@ -68,6 +68,14 @@ public:
     /** @brief Get the height of the window */
     int Height() const;
 
+    /**
+     * @brief Move the rectangle to the specified position inside the window
+     *
+     * @param dst_pos Destination position to move
+     * @param src Source rectangle to move
+     */
+    void Move(Vector2D<int> dst_pos, const Rectangle<int> &src);
+
 private:
     int width_, height_;
     std::vector<std::vector<PixelColor>> data_{};
