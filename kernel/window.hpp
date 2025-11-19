@@ -9,6 +9,7 @@
 #include <vector>
 #include <optional>
 #include "graphics.hpp"
+#include "frame_buffer.hpp"
 
 /**
  * @brief Window class represents a display area on the screen.
@@ -24,9 +25,9 @@ public:
     public:
         WindowWriter(Window &window) : window_{window} {}
         /** @brief Write the specified color to the specified point */
-        virtual void Write(int x, int y, const PixelColor &c) override
+        virtual void Write(Vector2D<int> pos, const PixelColor &c) override
         {
-            window_.At(x, y) = c;
+            window_.Write(pos, c);
         };
 
         /** @brief Get the pixel of width for the window */
@@ -39,17 +40,17 @@ public:
         Window &window_;
     };
 
-    Window(int width, int height);
+    Window(int width, int height, PixelFormat shadow_format);
     ~Window() = default;
     Window(const Window &) = delete;
     Window &operator=(const Window &rhs) = delete;
 
-    /** @brief Draw the window to the specified PixelWriter
+    /** @brief Draw the window to the specified FrameBuffer
      *
-     * @param writer PixelWriter to draw the window
+     * @param dst FrameBuffer to draw the window
      * @param position Position to draw the window starting from the top-left corner
      */
-    void DrawTo(PixelWriter &writer, Vector2D<int> position);
+    void DrawTo(FrameBuffer &dst, Vector2D<int> position);
 
     /** @brief Set transparent color */
     void SetTransparentColor(std::optional<PixelColor> c);
@@ -58,9 +59,9 @@ public:
     WindowWriter *Writer();
 
     /** @brief Get the pixel at the specified position */
-    PixelColor &At(int x, int y);
-    /** @brief Get the pixel at the specified position */
-    const PixelColor &At(int x, int y) const;
+    const PixelColor &At(Vector2D<int> pos) const;
+    /** @brief Write the pixel at the specified position */
+    void Write(Vector2D<int> pos, PixelColor c);
 
     /** @brief Get the width of the window */
     int Width() const;
@@ -72,4 +73,6 @@ private:
     std::vector<std::vector<PixelColor>> data_{};
     WindowWriter writer_{*this};
     std::optional<PixelColor> transparent_color_{std::nullopt};
+
+    FrameBuffer shadow_buffer_{};
 };

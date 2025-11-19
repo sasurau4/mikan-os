@@ -37,8 +37,8 @@ public:
     /** @brief Moves the Layer relative to its current position. This function does not re-render */
     Layer &MoveRelative(Vector2D<int> pos_diff);
 
-    /** @brief Draws the Layer to the specified PixelWriter. */
-    void DrawTo(PixelWriter &writer) const;
+    /** @brief Draws the Layer to the specified FrameBuffer. */
+    void DrawTo(FrameBuffer &screen) const;
 
 private:
     unsigned int id_;
@@ -50,8 +50,8 @@ private:
 class LayerManager
 {
 public:
-    /** @brief Sets the PixelWriter for the LayerManager. */
-    void SetWriter(PixelWriter *writer);
+    /** @brief Sets the FrameBuffer for the LayerManager. */
+    void SetWriter(FrameBuffer *screen);
 
     /** @brief Creates a new Layer and adds it to the LayerManager
      * The created layer is hold by LayerManager.
@@ -78,7 +78,7 @@ public:
     void Hide(unsigned int id);
 
 private:
-    PixelWriter *writer_{nullptr};
+    FrameBuffer *screen_{nullptr};
     std::vector<std::unique_ptr<Layer>> layers_{};
     std::vector<Layer *> layer_stack_{};
     unsigned int latest_id_{0};
