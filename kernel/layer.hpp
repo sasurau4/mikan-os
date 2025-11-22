@@ -82,6 +82,9 @@ public:
     /** @brief Hides the layer. */
     void Hide(unsigned int id);
 
+    /** @brief Finds a top most layer by the position */
+    Layer *FindLayerByPosition(Vector2D<int> pos, unsigned int exclude_id) const;
+
 private:
     FrameBuffer *screen_{nullptr};
     mutable FrameBuffer back_buffer_{};
