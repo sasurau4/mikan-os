@@ -33,6 +33,10 @@ public:
     std::shared_ptr<Window> GetWindow() const;
     /** @brief Returns the origin coordinates of the Layer. */
     Vector2D<int> GetPosition() const;
+    /** @brief Sets whether the Layer is draggable. */
+    Layer &SetDraggable(bool draggable);
+    /** @brief Returns whether the Layer is draggable. */
+    bool IsDraggable() const;
 
     /** @brief Moves the Layer to a new absolute position. This function does not re-render */
     Layer &Move(Vector2D<int> pos);
@@ -44,8 +48,9 @@ public:
 
 private:
     unsigned int id_;
-    Vector2D<int> pos_;
-    std::shared_ptr<Window> window_;
+    Vector2D<int> pos_{};
+    std::shared_ptr<Window> window_{};
+    bool draggable_{false};
 };
 
 /** @brief Manages multiple Layers. */
