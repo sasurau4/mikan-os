@@ -48,9 +48,10 @@ public:
     /** @brief Draw the window to the specified FrameBuffer
      *
      * @param dst FrameBuffer to draw the window
-     * @param position Position to draw the window starting from the top-left corner
+     * @param pos Position to draw the window starting from the top-left corner of the dst
+     * @param area Area inside the window to draw from the top-left corner of the the dst
      */
-    void DrawTo(FrameBuffer &dst, Vector2D<int> position);
+    void DrawTo(FrameBuffer &dst, Vector2D<int> pos, const Rectangle<int> &area);
 
     /** @brief Set transparent color */
     void SetTransparentColor(std::optional<PixelColor> c);
@@ -67,6 +68,8 @@ public:
     int Width() const;
     /** @brief Get the height of the window */
     int Height() const;
+    /** @brief Get the size of the window */
+    Vector2D<int> Size() const;
 
     /**
      * @brief Move the rectangle to the specified position inside the window

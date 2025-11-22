@@ -31,6 +31,8 @@ public:
     Layer &SetWindow(const std::shared_ptr<Window> &window);
     /** @brief Returns the window associated with the Layer. */
     std::shared_ptr<Window> GetWindow() const;
+    /** @brief Returns the origin coordinates of the Layer. */
+    Vector2D<int> GetPosition() const;
 
     /** @brief Moves the Layer to a new absolute position. This function does not re-render */
     Layer &Move(Vector2D<int> pos);
@@ -38,7 +40,7 @@ public:
     Layer &MoveRelative(Vector2D<int> pos_diff);
 
     /** @brief Draws the Layer to the specified FrameBuffer. */
-    void DrawTo(FrameBuffer &screen) const;
+    void DrawTo(FrameBuffer &screen, const Rectangle<int> &area) const;
 
 private:
     unsigned int id_;
@@ -60,11 +62,14 @@ public:
     Layer &NewLayer();
 
     /** @brief Draws the current displayed layer */
-    void Draw() const;
+    void Draw(const Rectangle<int> &area) const;
 
-    /** @brief Moves a layer to a new absolute position. This function does not re-render */
-    void Move(unsigned int id, Vector2D<int> new_position);
-    /** @brief Moves a layer relative to its current position. This function does not re-render */
+    /** @brief Draws a specific layer. */
+    void Draw(unsigned int id) const;
+
+    /** @brief Moves a layer to a new absolute position, then re-renders */
+    void Move(unsigned int id, Vector2D<int> new_pos);
+    /** @brief Moves a layer relative to its current position, then re-renders */
     void MoveRelative(unsigned int id, Vector2D<int> pos_diff);
 
     /** @brief Changes the height of a layer.
