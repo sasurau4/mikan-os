@@ -7,8 +7,10 @@
 
 #include <array>
 #include <cstdint>
+#include <deque>
 
 #include "x86_descriptor.hpp"
+#include "message.hpp"
 
 union InterruptDescriptorAttribute
 {
@@ -76,3 +78,5 @@ struct InterruptFrame
 };
 
 void NotifyEndOfInterrupt();
+
+void InitializeInterrupt(std::deque<Message> *msg_queue);
