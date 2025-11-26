@@ -25,6 +25,7 @@
 #include "window.hpp"
 #include "layer.hpp"
 #include "message.hpp"
+#include "timer.hpp"
 
 int printk(const char *format, ...)
 {
@@ -87,6 +88,8 @@ KernelMainNewStack(const FrameBufferConfig &frame_buffer_config_ref,
     InitializeMouse();
     layer_manager->Draw({{0, 0}, ScreenSize()});
 
+    InitializeLAPICTimer();
+
     char str[128];
     unsigned int count = 0;
 
@@ -114,6 +117,11 @@ KernelMainNewStack(const FrameBufferConfig &frame_buffer_config_ref,
         case Message::kInterruptXHCI:
         {
             usb::xhci::ProcessEvents();
+            break;
+        }
+        case Message::kInterruptLAPICTimer:
+        {
+            printk("Timer interrupt\n");
             break;
         }
 

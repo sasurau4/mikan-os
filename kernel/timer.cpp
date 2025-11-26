@@ -1,5 +1,7 @@
 #include "timer.hpp"
 
+#include "interrupt.hpp"
+
 namespace
 {
     const uint32_t kCountMax = 0xffffffffu;
@@ -11,8 +13,9 @@ namespace
 
 void InitializeLAPICTimer()
 {
-    divide_config = 0b1011;         // divide 1:1
-    lvt_timer = (0b001 << 16) | 32; // masked, one-shot
+    divide_config = 0b1011;                                   // divide 1:1
+    lvt_timer = (0b010 << 16) | InterruptVector::kLAPICTimer; // not-masked, periodic
+    initial_count = kCountMax;
 }
 
 void StartLAPICTimer()

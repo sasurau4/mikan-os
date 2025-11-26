@@ -65,6 +65,7 @@ public:
     enum Number
     {
         kXHCI = 0x40,
+        kLAPICTimer = 0x41,
     };
 };
 
