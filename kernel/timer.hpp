@@ -43,5 +43,7 @@ private:
 };
 
 extern TimerManager *timer_manager;
+extern unsigned long lapic_timer_freq;
+const int kTimerFreq = 100;
 
 void LAPICTimerOnInterrupt();

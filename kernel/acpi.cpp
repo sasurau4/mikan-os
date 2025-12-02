@@ -2,6 +2,7 @@
 
 #include <cstring>
 #include <cstdlib>
+#include "asmfunc.h"
 #include "logger.hpp"
 
 namespace
@@ -79,6 +80,27 @@ namespace acpi
 
     const FADT *fadt;
 
+    void WaitMilliseconds(unsigned long msec)
+    {
+        const bool pm_timer_32bit = (fadt->flags >> 8) & 1;
+        const uint32_t start = IoIn32(fadt->pm_tmr_blk);
+        uint32_t end = start + kPMTimerFreq * msec / 1000;
+        if (!pm_timer_32bit)
+        {
+            end &= 0x00ffffffu;
+        }
+
+        if (end < start)
+        {
+            while (IoIn32(fadt->pm_tmr_blk) >= start)
+            {
+            }
+        }
+        while (IoIn32(fadt->pm_tmr_blk) < end)
+        {
+        }
+    }
+
     void Initialize(const RSDP &rsdp)
     {
         if (!rsdp.IsValid())
@@ -93,7 +115,6 @@ namespace acpi
             Log(kError, "XSDT is not valid\n");
             exit(1);
         }
-        Log(kWarn, "XSDT found at address %p\n", &xsdt);
 
         fadt = nullptr;
         for (size_t i = 0; i < xsdt.Count(); ++i)
@@ -102,14 +123,13 @@ namespace acpi
             if (entry.IsValid("FACP"))
             {
                 fadt = reinterpret_cast<const FADT *>(&entry);
-                Log(kWarn, "FADT found at address %p\n", fadt);
                 break;
             }
         }
 
         if (fadt == nullptr)
         {
-            Log(kWarn, "FADT is not found\n");
+            Log(kError, "FADT is not found\n");
             exit(1);
         }
     }
