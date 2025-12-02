@@ -51,6 +51,34 @@ namespace acpi
         return true;
     }
 
+    bool DescriptionHeader::IsValid(const char *expected_signature) const
+    {
+        if (strncmp(this->signature, expected_signature, 4) != 0)
+        {
+            Log(kDebug, "invalid signature: %.4s\n", this->signature);
+            return false;
+        }
+        if (auto sum = SumBytes(this, this->length); sum != 0)
+        {
+            Log(kDebug, "sun of %u bytes must be 0: %d\n", this->length, sum);
+            return false;
+        }
+        return true;
+    }
+
+    const DescriptionHeader &XSDT::operator[](size_t i) const
+    {
+        auto entries = reinterpret_cast<const uint64_t *>(&this->header + 1);
+        return *reinterpret_cast<const DescriptionHeader *>(entries[i]);
+    }
+
+    size_t XSDT::Count() const
+    {
+        return (this->header.length - sizeof(DescriptionHeader)) / sizeof(uint64_t);
+    }
+
+    const FADT *fadt;
+
     void Initialize(const RSDP &rsdp)
     {
         if (!rsdp.IsValid())
@@ -58,5 +86,32 @@ namespace acpi
             Log(kError, "RSDP is not valid\n");
             exit(1);
         }
+
+        const XSDT &xsdt = *reinterpret_cast<const XSDT *>(rsdp.xsdt_address);
+        if (!xsdt.header.IsValid("XSDT"))
+        {
+            Log(kError, "XSDT is not valid\n");
+            exit(1);
+        }
+        Log(kWarn, "XSDT found at address %p\n", &xsdt);
+
+        fadt = nullptr;
+        for (size_t i = 0; i < xsdt.Count(); ++i)
+        {
+            const auto &entry = xsdt[i];
+            if (entry.IsValid("FACP"))
+            {
+                fadt = reinterpret_cast<const FADT *>(&entry);
+                Log(kWarn, "FADT found at address %p\n", fadt);
+                break;
+            }
+        }
+
+        if (fadt == nullptr)
+        {
+            Log(kWarn, "FADT is not found\n");
+            exit(1);
+        }
     }
+
 } // namespace acpi
