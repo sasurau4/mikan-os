@@ -97,4 +97,15 @@
         "thread": "cpp",
         "cinttypes": "cpp"
     },
+    "cSpell.words": [
+        "acpi",
+        "asmfunc",
+        "fxrstor",
+        "fxsave",
+        "iret",
+        "printk",
+        "pushfq",
+        "RFLAGS",
+        "RSDP"
+    ],
 }
