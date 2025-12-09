@@ -106,6 +106,7 @@
         "printk",
         "pushfq",
         "RFLAGS",
-        "RSDP"
+        "RSDP",
+        "LAPIC"
     ],
 }
