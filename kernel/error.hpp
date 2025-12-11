@@ -30,6 +30,7 @@ public:
         kNoWaiter,
         kNoPCIMSI,
         kUnknownPixelFormat,
+        kNoSuchTask,
         kLastOfCode, // This should be the last code in the enum
     };
 
@@ -84,6 +85,7 @@ private:
         "kUnknownXHCISpeedID",
         "kNoWaiter",
         "kUnknownPixelFormat",
+        "kNoSuchTask",
         "kNoPCIMSI",
     };
     static_assert(Error::Code::kLastOfCode == code_names_.size());

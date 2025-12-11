@@ -208,9 +208,12 @@ KernelMainNewStack(const FrameBufferConfig &frame_buffer_config_ref,
     bool textbox_cursor_visible = false;
 
     InitializeTask();
-    task_manager->NewTask().InitContext(TaskB, 45);
-    task_manager->NewTask().InitContext(TaskIdle, 0xdeadbeef);
-    task_manager->NewTask().InitContext(TaskIdle, 0xcafebabe);
+    const uint64_t taskb_id = task_manager->NewTask()
+                                  .InitContext(TaskB, 45)
+                                  .Wakeup()
+                                  .ID();
+    task_manager->NewTask().InitContext(TaskIdle, 0xdeadbeef).Wakeup();
+    task_manager->NewTask().InitContext(TaskIdle, 0xcafebabe).Wakeup();
 
     char str[128];
 
@@ -260,6 +263,14 @@ KernelMainNewStack(const FrameBufferConfig &frame_buffer_config_ref,
         case Message::kKeyPush:
         {
             InputTextWindow(msg.arg.keyboard.ascii);
+            if (msg.arg.keyboard.ascii == 's')
+            {
+                printk("sleep TaskB: %s\n", task_manager->Sleep(taskb_id).Name());
+            }
+            else if (msg.arg.keyboard.ascii == 'w')
+            {
+                printk("wakeup TaskB: %s\n", task_manager->Wakeup(taskb_id).Name());
+            }
             break;
         }
 
