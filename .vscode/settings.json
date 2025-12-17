@@ -107,6 +107,7 @@
         "pushfq",
         "RFLAGS",
         "RSDP",
-        "LAPIC"
+        "LAPIC",
+        "XHCI"
     ],
 }
