@@ -12,6 +12,7 @@
 
 #include "graphics.hpp"
 #include "window.hpp"
+#include "message.hpp"
 
 /**
  * @brief Represents a graphical layer with a unique identifier.
@@ -103,3 +104,4 @@ private:
 extern LayerManager *layer_manager;
 
 void InitializeLayer();
+void ProcessLayerMessage(const Message &msg);
