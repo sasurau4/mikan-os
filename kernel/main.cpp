@@ -154,29 +154,29 @@ void TaskB(uint64_t task_id, int64_t data)
         sprintf(str, "%010d", count);
         FillRectangle(*task_b_window->Writer(), {24, 28}, {8 * 10, 16}, {0xc6, 0xc6, 0xc6});
         WriteString(*task_b_window->Writer(), {24, 28}, str, {0, 0, 0});
-    }
 
-    Message msg{Message::kLayer, task_id};
-    msg.arg.layer.layer_id = task_b_window_layer_id;
-    msg.arg.layer.op = LayerOperation::Draw;
-    __asm__("cli");
-    task_manager->SendMessage(1, msg);
-    __asm__("sti");
-
-    while (true)
-    {
+        Message msg{Message::kLayer, task_id};
+        msg.arg.layer.layer_id = task_b_window_layer_id;
+        msg.arg.layer.op = LayerOperation::Draw;
         __asm__("cli");
-        auto msg = task.ReceiveMessage();
-        if (!msg)
-        {
-            task.Sleep();
-            __asm__("sti");
-            continue;
-        }
+        task_manager->SendMessage(1, msg);
+        __asm__("sti");
 
-        if (msg->type == Message::kLayerFinish)
+        while (true)
         {
-            break;
+            __asm__("cli");
+            auto msg = task.ReceiveMessage();
+            if (!msg)
+            {
+                task.Sleep();
+                __asm__("sti");
+                continue;
+            }
+
+            if (msg->type == Message::kLayerFinish)
+            {
+                break;
+            }
         }
     }
 }
