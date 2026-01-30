@@ -30,6 +30,7 @@
 #include "acpi.hpp"
 #include "keyboard.hpp"
 #include "task.hpp"
+#include "terminal.hpp"
 
 int printk(const char *format, ...)
 {
@@ -70,12 +71,12 @@ void InitializeTextWindow()
 
     text_window = std::make_shared<ToplevelWindow>(
         win_w, win_h, screen_config.pixel_format, "Text Box Test");
-    DrawTextBox(*text_window->InnerWriter(), {0, 0}, text_window->InnerSize());
+    DrawTextbox(*text_window->InnerWriter(), {0, 0}, text_window->InnerSize());
 
     text_window_layer_id = layer_manager->NewLayer()
                                .SetWindow(text_window)
                                .SetDraggable(true)
-                               .Move({350, 200})
+                               .Move({500, 100})
                                .ID();
 
     layer_manager->UpDown(text_window_layer_id, std::numeric_limits<int>::max());
@@ -223,6 +224,11 @@ KernelMainNewStack(const FrameBufferConfig &frame_buffer_config_ref,
                                   .Wakeup()
                                   .ID();
 
+    const uint64_t task_terminal_id = task_manager->NewTask()
+                                          .InitContext(TaskTerminal, 0)
+                                          .Wakeup()
+                                          .ID();
+
     usb::xhci::Initialize();
     InitializeKeyboard();
     InitializeMouse();
@@ -270,6 +276,10 @@ KernelMainNewStack(const FrameBufferConfig &frame_buffer_config_ref,
                 textbox_cursor_visible = !textbox_cursor_visible;
                 DrawTextCursor(textbox_cursor_visible);
                 layer_manager->Draw(text_window_layer_id);
+
+                __asm__("cli");
+                task_manager->SendMessage(task_terminal_id, *msg);
+                __asm__("sti");
             }
             break;
         }
