@@ -111,7 +111,6 @@ Rectangle<int> Terminal::InputKey(
     {
         draw_area = HistoryUpDown(1); // up arrow
     }
-    Log(kError, "keycode: %02x, ascii: %02x\n", keycode, ascii);
 
     DrawCursor(true);
 
