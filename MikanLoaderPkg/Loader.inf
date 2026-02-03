@@ -24,3 +24,6 @@
 
 [Protocols]
     gEfiLoadedImageProtocolGuid
+    gEfiLoadFileProtocolGuid
+    gEfiSimpleFileSystemProtocolGuid
+    gEfiBlockIoProtocolGuid
