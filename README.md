@@ -49,6 +49,13 @@ Other terminal from repo root
 env QEMU_OPTS="-s" ./devenv/run_qemu.sh ../../tianocore/edk2/Build/MikanLoaderX64/DEBUG_CLANGPDB/X64/Loader.efi ./kernel/kernel.elf
 ```
 
+#### Run with app
+
+```bash
+source ./devenv/buildenv.fish
+./build.sh run
+```
+
 ### How to debug with gdb
 
 https://qiita.com/ktamido/items/2e25d505d475933dcd91

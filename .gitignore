@@ -2,3 +2,4 @@
 *.o
 *.elf
 /devenv/x86_64-elf
+/mnt
