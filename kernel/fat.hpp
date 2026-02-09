@@ -74,6 +74,7 @@ namespace fat
     } __attribute__((packed));
 
     extern BPB *boot_volume_image;
+    extern unsigned long bytes_per_cluster;
     void Initialize(void *volume_image);
 
     /**
@@ -106,4 +107,26 @@ namespace fat
      * @param ext Buffer to store the extension (at least 4 bytes)
      */
     void ReadName(const DirectoryEntry &entry, char *base, char *ext);
+
+    static const unsigned long kEndOfClusterchain = 0x0ffffffflu;
+
+    /**
+     * @brief Get the next cluster in the cluster chain
+     *
+     * @param cluster Current cluster number
+     * @return next cluster number in the chain, or kEndOfClusterchain if it's the end of the chain
+     *
+     */
+    unsigned long NextCluster(unsigned long cluster);
+
+    /**
+     * @brief Find a file by name in the specified directory
+     *
+     * @param name File name (8+3 format, e.g., "FILE    TXT", case insensitive)
+     * @param directory_cluster Cluster number of the directory to search in (0 for root directory)
+     * @return Pointer to the DirectoryEntry if found, nullptr otherwise
+     */
+    DirectoryEntry *FindFile(const char *name, unsigned long directory_cluster = 0);
+
+    bool NameIsEqual(const DirectoryEntry &entry, const char *name);
 } // namespace fat
