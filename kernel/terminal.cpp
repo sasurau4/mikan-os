@@ -16,6 +16,10 @@ namespace
     {
         std::vector<char *> argv;
         argv.push_back(command);
+        if (!first_arg)
+        {
+            return argv;
+        }
 
         char *p = first_arg;
         while (true)
