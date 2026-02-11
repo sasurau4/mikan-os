@@ -305,8 +305,10 @@ void Terminal::ExecuteFile(const fat::DirectoryEntry &file_entry, char *command,
         cluster = fat::NextCluster(cluster);
     }
 
-    auto elf_header = reinterpret_cast<Elf64_Ehdr *>(&file_buf[0]);
-    if (memcmp(elf_header->e_ident, "\x7f"
+    // Copy buffer to struct because llvm-18 check alignment violation more strictly than llvm-7
+    Elf64_Ehdr elf_header;
+    memcpy(&elf_header, &file_buf[0], sizeof(Elf64_Ehdr));
+    if (memcmp(&elf_header.e_ident, "\x7f"
                                     "ELF",
                4) != 0)
     {
@@ -318,10 +320,37 @@ void Terminal::ExecuteFile(const fat::DirectoryEntry &file_entry, char *command,
 
     auto argv = MakeArgVector(command, first_arg);
 
-    auto entry_addr = elf_header->e_entry;
-    entry_addr += reinterpret_cast<uintptr_t>(&file_buf[0]);
+    const Elf64_Phdr *phdr = reinterpret_cast<const Elf64_Phdr *>(&file_buf[elf_header.e_phoff]);
+    for (int i = 0; i < elf_header.e_phnum; ++i)
+    {
+        // Ignore non-loadable segments
+        if (phdr[i].p_type != PT_LOAD)
+        {
+            continue;
+        }
+        // Allocate PT_LOAD segments to memory because Offset(FileOffset) and VirtAddr is not same by llvm-18.
+        // This mismatch confirmed by `llvm-readelf-18 ./apps/rpn/rpn -l`
+        // TODO: need to implement paging (virtual memory), currently we use identity mapping only.
+        void *dest = reinterpret_cast<void *>(phdr[i].p_vaddr);
+        const void *src = &file_buf[phdr[i].p_offset];
+
+        memcpy(
+            dest,
+            src,
+            phdr[i]
+                .p_filesz);
+
+        // zero clear the area not covered in the file for .bss section and so on.
+        if (phdr[i].p_memsz > phdr[i].p_filesz)
+        {
+            memset(
+                reinterpret_cast<uint8_t *>(dest) + phdr[i].p_filesz,
+                0,
+                phdr[i].p_memsz - phdr[i].p_filesz);
+        }
+    }
     using Func = int(int, char **);
-    auto f = reinterpret_cast<Func *>(entry_addr);
+    auto f = reinterpret_cast<Func *>(elf_header.e_entry);
     auto ret = f(argv.size(), &argv[0]);
 
     char s[64];
