@@ -269,3 +269,5 @@ extern "C" void __cxa_pure_virtual()
     while (1)
         __asm("hlt");
 }
+
+extern "C" void __cxa_atexit() {}
