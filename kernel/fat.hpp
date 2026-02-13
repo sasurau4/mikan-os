@@ -6,6 +6,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstddef>
 
 namespace fat
 {
@@ -129,4 +130,14 @@ namespace fat
     DirectoryEntry *FindFile(const char *name, unsigned long directory_cluster = 0);
 
     bool NameIsEqual(const DirectoryEntry &entry, const char *name);
+
+    /**
+     * @brief Load the content of a file into a buffer
+     *
+     * @param buf Buffer to load the file content into
+     * @param len Size of the buffer
+     * @param entry Directory entry of the file to load
+     * @return Byte size of the loaded data
+     */
+    size_t LoadFile(void *buf, size_t len, const DirectoryEntry &entry);
 } // namespace fat
