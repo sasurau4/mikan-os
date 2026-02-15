@@ -2,6 +2,7 @@
 
 #include <cstring>
 #include <cctype>
+#include "logger.hpp"
 
 namespace fat
 {
@@ -106,7 +107,6 @@ namespace fat
         {
             return c != 0 && c != fat::kEndOfClusterchain;
         };
-
         auto cluster = entry.FirstCluster();
 
         const auto buf_uint8 = reinterpret_cast<uint8_t *>(buf);
@@ -118,8 +118,8 @@ namespace fat
             if (bytes_per_cluster >= buf_end - p)
             {
                 memcpy(p, GetSectorByCluster<uint8_t>(cluster), buf_end - p);
+                return len;
             }
-            return len;
             memcpy(p, GetSectorByCluster<uint8_t>(cluster), bytes_per_cluster);
             p += bytes_per_cluster;
             cluster = NextCluster(cluster);
