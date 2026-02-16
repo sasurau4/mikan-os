@@ -86,11 +86,11 @@ private:
         "kInvalidPhase",
         "kUnknownXHCISpeedID",
         "kNoWaiter",
+        "kNoPCIMSI",
         "kUnknownPixelFormat",
         "kNoSuchTask",
         "kInvalidFormat",
         "kFrameTooSmall",
-        "kNoPCIMSI",
     };
     static_assert(Error::Code::kLastOfCode == code_names_.size());
 
