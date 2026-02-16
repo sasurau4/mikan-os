@@ -53,24 +53,33 @@ namespace
     }
 }
 
-Elf64_Phdr *GetProgramHeader(Elf64_Ehdr *ehdr)
+Elf64_Phdr *GetProgramHeader(Elf64_Ehdr *ehdr, void *file_buf, int i)
 {
     return reinterpret_cast<Elf64_Phdr *>(
-        reinterpret_cast<uintptr_t>(ehdr) + ehdr->e_phoff);
+        reinterpret_cast<uintptr_t>(file_buf) + ehdr->e_phoff + i * ehdr->e_phentsize);
 }
 
-uintptr_t GetFirstLoadAddress(Elf64_Ehdr *ehdr)
+/**
+ * @brief Get the first load address of the ELF file.
+ * The first load address is the lowest virtual address of the PT_LOAD segments.
+ * Returning phdr.pvaddr of the first PT_LOAD segment is not correct because llvm-18 generates non-contiguous load segments.
+ * @param ehdr Pointer to the ELF header.
+ * @param file_buf Pointer to the buffer containing the ELF file.
+ * @param first_addr Pointer to the variable to store the first load address like memcpy destination.
+ */
+void GetFirstLoadAddress(Elf64_Ehdr *ehdr, void *file_buf, uintptr_t *first_addr)
 {
-    auto phdr = GetProgramHeader(ehdr);
     for (int i = 0; i < ehdr->e_phnum; ++i)
     {
-        if (phdr[i].p_type != PT_LOAD)
+        const auto phdr = GetProgramHeader(ehdr, file_buf, i);
+
+        if (phdr->p_type != PT_LOAD)
         {
             continue;
         }
-        return phdr[i].p_vaddr;
+        *first_addr = phdr->p_vaddr;
+        return;
     }
-    return 0;
 }
 
 static_assert(kBytesPerFrame >= 4096);
@@ -156,47 +165,84 @@ Error SetupPageMaps(LinearAddress4Level addr, size_t num_4kpages)
     return SetupPageMap(pml4_table, 4, addr, num_4kpages).error;
 }
 
-Error CopyLoadSegments(Elf64_Ehdr *ehdr)
+Error CopyLoadSegments(Elf64_Ehdr *ehdr, void *file_buf)
 {
-    auto phdr = GetProgramHeader(ehdr);
+    /**
+     * First loop to decide vaddr_min and vaddr_max for all PT_LOAD segments because llvm-18 generates non-contiguous load segments.
+     *
+     * Ex.
+     *   Segment 1: vaddr = 0x0000, memsz = 1244（Page 0内）
+     *   Segment 2: vaddr = 0x14e0, memsz = 1070（Page 1内）
+     *   Segment 3: vaddr = 0x2910, memsz = 2720（Page 2〜3にまたがる）
+     * In this case, vaddr_min = 0x0000, vaddr_max = 0x2910 + 2720 = 0x3c30, total_range = 0x3c30, num_4kpages = 4.
+     * but sum memsz = 1244 + 1070 + 2720 = 5034 is num_4kpages = 2 and smaller than total_range = 0x3c30 = 15600 because of non-contiguous segments.
+     * To avoid this problem, we need to calculate vaddr_min and vaddr_max first and allocate memory for the whole range, then copy each segment to the allocated memory.
+     */
+    uint64_t vaddr_min = 0xffffffffffffffff;
+    uint64_t vaddr_max = 0;
     for (int i = 0; i < ehdr->e_phnum; ++i)
     {
-        if (phdr[i].p_type != PT_LOAD)
+        auto phdr = GetProgramHeader(ehdr, file_buf, i);
+        if (phdr->p_type != PT_LOAD)
+        {
+            continue;
+        }
+        vaddr_min = std::min(vaddr_min, phdr->p_vaddr);
+        vaddr_max = std::max(vaddr_max, phdr->p_vaddr + phdr->p_memsz);
+    }
+
+    const auto total_range = vaddr_max - vaddr_min;
+    LinearAddress4Level dest_addr;
+    dest_addr.value = vaddr_min;
+    const auto num_4kpages = (total_range + 4095) / 4096;
+
+    // Setup page maps
+    if (auto err = SetupPageMaps(dest_addr, num_4kpages))
+    {
+        return err;
+    }
+
+    // Second loop to copy each PT_LOAD segment to memory
+    for (int i = 0; i < ehdr->e_phnum; ++i)
+    {
+        auto phdr = GetProgramHeader(ehdr, file_buf, i);
+        if (phdr->p_type != PT_LOAD)
         {
             continue;
         }
 
-        LinearAddress4Level dest_addr;
-        dest_addr.value = phdr[i].p_vaddr;
-        const auto num_4kpages = (phdr[i].p_memsz + 4095) / 4096;
-
-        if (auto err = SetupPageMaps(dest_addr, num_4kpages))
-        {
-            return err;
-        }
-
-        const auto src = reinterpret_cast<uint8_t *>(ehdr) + phdr[i].p_offset;
-        const auto dst = reinterpret_cast<uint8_t *>(phdr[i].p_vaddr);
-        memcpy(dst, src, phdr[i].p_filesz);
-        memset(dst + phdr[i].p_filesz, 0, phdr[i].p_memsz - phdr[i].p_filesz);
+        const auto src = reinterpret_cast<uint8_t *>(file_buf) + phdr->p_offset;
+        const auto dst = reinterpret_cast<uint8_t *>(phdr->p_vaddr);
+        memcpy(dst, src, phdr->p_filesz);
+        memset(dst + phdr->p_filesz, 0, phdr->p_memsz - phdr->p_filesz);
     }
     return MAKE_ERROR(Error::kSuccess);
 }
 
-Error LoadElf(Elf64_Ehdr *ehdr)
+/**
+ * @brief Load an ELF executable into memory.
+ *
+ * @param ehdr Pointer to the ELF header.
+ * Elf header is the dictionary of the ELF file buffer, DO NOT access data from it directly.
+ * Instead, use the file buffer.
+ * @param file_buf Pointer to the buffer containing the ELF file.
+ * @return Error Error code indicating success or failure.
+ */
+Error LoadElf(Elf64_Ehdr *ehdr, void *file_buf)
 {
     if (ehdr->e_type != ET_EXEC)
     {
         return MAKE_ERROR(Error::kInvalidFormat);
     }
 
-    const auto addr_first = GetFirstLoadAddress(ehdr);
+    uintptr_t addr_first = 0;
+    GetFirstLoadAddress(ehdr, file_buf, &addr_first);
     if (addr_first < 0xffff'8000'0000'0000)
     {
         return MAKE_ERROR(Error::kInvalidFormat);
     }
 
-    if (auto err = CopyLoadSegments(ehdr))
+    if (auto err = CopyLoadSegments(ehdr, file_buf))
     {
         return err;
     }
@@ -495,7 +541,11 @@ Error Terminal::ExecuteFile(const fat::DirectoryEntry &file_entry, char *command
     std::vector<uint8_t> file_buf(file_entry.file_size);
     fat::LoadFile(&file_buf[0], file_buf.size(), file_entry);
 
-    auto elf_header = reinterpret_cast<Elf64_Ehdr *>(&file_buf[0]);
+    // Copy buffer to struct because llvm-18 check alignment violation more strictly than llvm-7
+    Elf64_Ehdr elf_header_obj;
+    // // copy &file_buf[0] to &elf_header_obj only 64 (Elf64_Ehdr size) bytes
+    memcpy(&elf_header_obj, &file_buf[0], sizeof(Elf64_Ehdr));
+    auto elf_header = &elf_header_obj;
     if (memcmp(elf_header->e_ident, "\x7f"
                                     "ELF",
                4) != 0)
@@ -507,7 +557,7 @@ Error Terminal::ExecuteFile(const fat::DirectoryEntry &file_entry, char *command
     }
 
     auto argv = MakeArgVector(command, first_arg);
-    if (auto err = LoadElf(elf_header))
+    if (auto err = LoadElf(elf_header, &file_buf[0]))
     {
         return err;
     }
@@ -522,83 +572,14 @@ Error Terminal::ExecuteFile(const fat::DirectoryEntry &file_entry, char *command
     sprintf(s, "app exited. ret = %d\n", ret);
     Print(s);
 
-    const auto addr_first = GetFirstLoadAddress(elf_header);
+    uintptr_t addr_first = 0;
+    GetFirstLoadAddress(elf_header, &file_buf[0], &addr_first);
     if (auto err = CleanPageMaps(LinearAddress4Level{addr_first}))
     {
         return err;
     }
 
     return MAKE_ERROR(Error::kSuccess);
-
-    // remove following
-    // auto cluster = file_entry.FirstCluster();
-    // auto remain_bytes = file_entry.file_size;
-
-    // std::vector<uint8_t> file_buf(remain_bytes);
-
-    // auto p = &file_buf[0];
-
-    // while (cluster != 0 && cluster != fat::kEndOfClusterchain)
-    // {
-    //     const auto copy_bytes = fat::bytes_per_cluster < remain_bytes ? fat::bytes_per_cluster : remain_bytes;
-    //     memcpy(p, fat::GetSectorByCluster<uint8_t>(cluster), copy_bytes);
-
-    //     remain_bytes -= copy_bytes;
-    //     p += copy_bytes;
-    //     cluster = fat::NextCluster(cluster);
-    // }
-
-    // // Copy buffer to struct because llvm-18 check alignment violation more strictly than llvm-7
-    // Elf64_Ehdr elf_header;
-    // memcpy(&elf_header, &file_buf[0], sizeof(Elf64_Ehdr));
-    // if (memcmp(&elf_header.e_ident, "\x7f"
-    //                                 "ELF",
-    //            4) != 0)
-    // {
-    //     using Func = void();
-    //     auto f = reinterpret_cast<Func *>(&file_buf[0]);
-    //     f();
-    //     return;
-    // }
-
-    // auto argv = MakeArgVector(command, first_arg);
-
-    // const Elf64_Phdr *phdr = reinterpret_cast<const Elf64_Phdr *>(&file_buf[elf_header.e_phoff]);
-    // for (int i = 0; i < elf_header.e_phnum; ++i)
-    // {
-    //     // Ignore non-loadable segments
-    //     if (phdr[i].p_type != PT_LOAD)
-    //     {
-    //         continue;
-    //     }
-    //     // Allocate PT_LOAD segments to memory because Offset(FileOffset) and VirtAddr is not same by llvm-18.
-    //     // This mismatch confirmed by `llvm-readelf-18 ./apps/rpn/rpn -l`
-    //     // TODO: need to implement paging (virtual memory), currently we use identity mapping only.
-    //     void *dest = reinterpret_cast<void *>(phdr[i].p_vaddr);
-    //     const void *src = &file_buf[phdr[i].p_offset];
-
-    //     memcpy(
-    //         dest,
-    //         src,
-    //         phdr[i]
-    //             .p_filesz);
-
-    //     // zero clear the area not covered in the file for .bss section and so on.
-    //     if (phdr[i].p_memsz > phdr[i].p_filesz)
-    //     {
-    //         memset(
-    //             reinterpret_cast<uint8_t *>(dest) + phdr[i].p_filesz,
-    //             0,
-    //             phdr[i].p_memsz - phdr[i].p_filesz);
-    //     }
-    // }
-    // using Func = int(int, char **);
-    // auto f = reinterpret_cast<Func *>(elf_header.e_entry);
-    // auto ret = f(argv.size(), &argv[0]);
-
-    // char s[64];
-    // sprintf(s, "app exited. ret = %d\n", ret);
-    // Print(s);
 }
 
 void Terminal::Print(char c)
