@@ -15,6 +15,9 @@ then
     exit 1
 fi
 
+# -d int,cpu_reset\
+# -D qemu.log \
+
 sudo qemu-system-x86_64 \
     -m 1G \
     -enable-kvm \

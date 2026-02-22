@@ -3,3 +3,4 @@
 *.elf
 /devenv/x86_64-elf
 /mnt
+qemu.log
