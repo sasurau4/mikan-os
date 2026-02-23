@@ -46,7 +46,10 @@ extern "C" int main(int argc, char **argv)
     {
         return 0;
     }
+    volatile int temp = 0;
     while (1)
-        ;
+    {
+        temp = 0;
+    }
     // return static_cast<int>(Pop());
 }

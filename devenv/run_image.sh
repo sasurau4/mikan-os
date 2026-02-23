@@ -15,7 +15,7 @@ then
     exit 1
 fi
 
-# -d int,cpu_reset\
+# -d int,cpu_reset,guest_errors,cpu,in_asm\
 # -D qemu.log \
 
 sudo qemu-system-x86_64 \
