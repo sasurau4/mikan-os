@@ -15,9 +15,15 @@ then
     exit 1
 fi
 
+
+# If you want to see more logs, following steps:
+# 1. Remove kvm option and add -accel tcg option
+# -accel tcg \
+# 2. Add -d and -D options
 # -d int,cpu_reset,guest_errors,cpu,in_asm\
 # -D qemu.log \
 
+    # -enable-kvm \
 sudo qemu-system-x86_64 \
     -m 1G \
     -enable-kvm \
