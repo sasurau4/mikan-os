@@ -103,11 +103,12 @@
         "fxrstor",
         "fxsave",
         "iret",
+        "LAPIC",
         "printk",
         "pushfq",
         "RFLAGS",
         "RSDP",
-        "LAPIC",
+        "syscall",
         "XHCI"
     ],
 }
