@@ -18,7 +18,7 @@ enum LogLevel
  * @brief Set the global log level for the kernel logger.
  * The logger will only output messages with a level greater than or equal to this value.
  */
-void SetLogLevel(LogLevel level);
+void SetLogLevel(enum LogLevel level);
 
 /**
  * @brief Log a message with the specified log level.
@@ -27,4 +27,4 @@ void SetLogLevel(LogLevel level);
  * @param format The format string for the message, compat to printk.
  * @param ... Additional arguments for the format string.
  */
-int Log(LogLevel level, const char *format, ...);
+int Log(enum LogLevel level, const char *format, ...);
