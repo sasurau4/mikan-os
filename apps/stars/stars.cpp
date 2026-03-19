@@ -15,10 +15,12 @@ extern "C" void main(int argc, char **argv)
     SyscallWinFillRectangle(layer_id, 4, 24, kWidth, kHeight, 0x00'00'00);
 
     int num_stars = 100;
-    if (argc > 2)
+    if (argc >= 2)
     {
         num_stars = atoi(argv[1]);
     }
+
+    auto [tick_start, tick_freq] = SyscallGetCurrentTick();
 
     std::default_random_engine rand_engine;
     std::uniform_int_distribution x_dist(0, kWidth - 2), y_dist(0, kHeight - 2);
@@ -28,6 +30,11 @@ extern "C" void main(int argc, char **argv)
         int y = y_dist(rand_engine);
         SyscallWinFillRectangle(layer_id, 4 + x, 24 + y, 2, 2, 0xff'f1'00);
     }
+
+    auto tick_end = SyscallGetCurrentTick();
+    printf("%d stars in %lu ms.\n",
+           num_stars,
+           (tick_end.value - tick_start) * 1000 / tick_freq);
 
     exit(0);
 }

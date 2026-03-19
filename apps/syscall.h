@@ -23,6 +23,7 @@ extern "C"
     struct SyscallResult SyscallWinWriteString(unsigned int layer_id, int x, int y, uint32_t color, const char *s);
     struct SyscallResult SyscallWinFillRectangle(
         unsigned int layer_id, int x, int y, int w, int h, uint32_t color);
+    struct SyscallResult SyscallGetCurrentTick();
 
 #ifdef __cplusplus
 } // extern "C"
