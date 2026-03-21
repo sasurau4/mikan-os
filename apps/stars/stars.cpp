@@ -12,7 +12,8 @@ extern "C" void main(int argc, char **argv)
         exit(err_openwin);
     }
 
-    SyscallWinFillRectangle(layer_id, 4, 24, kWidth, kHeight, 0x00'00'00);
+    SyscallWinFillRectangle(layer_id | LAYER_NO_REDRAW,
+                            4, 24, kWidth, kHeight, 0x00'00'00);
 
     int num_stars = 100;
     if (argc >= 2)
@@ -28,8 +29,10 @@ extern "C" void main(int argc, char **argv)
     {
         int x = x_dist(rand_engine);
         int y = y_dist(rand_engine);
-        SyscallWinFillRectangle(layer_id, 4 + x, 24 + y, 2, 2, 0xff'f1'00);
+        SyscallWinFillRectangle(layer_id | LAYER_NO_REDRAW,
+                                4 + x, 24 + y, 2, 2, 0xff'f1'00);
     }
+    SyscallWinRedraw(layer_id);
 
     auto tick_end = SyscallGetCurrentTick();
     printf("%d stars in %lu ms.\n",
