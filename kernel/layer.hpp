@@ -66,6 +66,8 @@ public:
      * @return Reference to the newly created Layer
      */
     Layer &NewLayer();
+    /** @brief Removes the Layer with the given id from the LayerManager. */
+    void RemoveLayer(unsigned int id);
 
     /** @brief Draws the current displayed layer */
     void Draw(const Rectangle<int> &area) const;
