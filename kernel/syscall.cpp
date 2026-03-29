@@ -298,6 +298,16 @@ namespace syscall
                 ++i;
                 break;
             }
+            case Message::kMouseButton:
+            {
+                app_events[i].type = AppEvent::kMouseButton;
+                app_events[i].arg.mouse_button.x = msg->arg.mouse_button.x;
+                app_events[i].arg.mouse_button.y = msg->arg.mouse_button.y;
+                app_events[i].arg.mouse_button.press = msg->arg.mouse_button.press;
+                app_events[i].arg.mouse_button.button = msg->arg.mouse_button.button;
+                ++i;
+                break;
+            }
             default:
             {
                 Log(kInfo, "uncaught event type: %u\n", msg->type);
