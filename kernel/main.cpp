@@ -228,7 +228,10 @@ KernelMainNewStack(const FrameBufferConfig &frame_buffer_config_ref,
         {
             if (auto act = active_layer->GetActive(); act == text_window_layer_id)
             {
-                InputTextWindow(msg->arg.keyboard.ascii);
+                if (msg->arg.keyboard.press)
+                {
+                    InputTextWindow(msg->arg.keyboard.ascii);
+                }
             }
             else
             {
