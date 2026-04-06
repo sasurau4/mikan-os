@@ -323,6 +323,33 @@ Error CleanPageMaps(LinearAddress4Level addr)
     return memory_manager->Free(pdp_frame, 1);
 }
 
+WithError<PageMapEntry *> SetupPML4(Task &current_task)
+{
+    auto pml4 = NewPageMap();
+    if (pml4.error)
+    {
+        return pml4;
+    }
+
+    const auto current_pml4 = reinterpret_cast<PageMapEntry *>(GetCR3());
+    memcpy(pml4.value, current_pml4, 256 * sizeof(uint64_t));
+
+    const auto cr3 = reinterpret_cast<uint64_t>(pml4.value);
+    SetCR3(cr3);
+    current_task.Context().cr3 = cr3;
+    return pml4;
+}
+
+Error FreePML4(Task &current_task)
+{
+    const auto cr3 = current_task.Context().cr3;
+    current_task.Context().cr3 = 0;
+    ResetCR3();
+
+    const FrameID frame{cr3 / kBytesPerFrame};
+    return memory_manager->Free(frame, 1);
+}
+
 Terminal::Terminal(uint64_t task_id) : task_id_{task_id}
 {
     window_ = std::make_shared<ToplevelWindow>(
@@ -585,6 +612,15 @@ Error Terminal::ExecuteFile(const fat::DirectoryEntry &file_entry, char *command
         return MAKE_ERROR(Error::kSuccess);
     }
 
+    __asm__("cli");
+    auto &task = task_manager->CurrentTask();
+    __asm__("sti");
+
+    if (auto pml4 = SetupPML4(task); pml4.error)
+    {
+        return pml4.error;
+    }
+
     if (auto err = LoadElf(elf_header, &file_buf[0]))
     {
         return err;
@@ -611,10 +647,6 @@ Error Terminal::ExecuteFile(const fat::DirectoryEntry &file_entry, char *command
         return err;
     }
 
-    __asm__("cli");
-    auto &task = task_manager->CurrentTask();
-    __asm__("sti");
-
     auto entry_addr = elf_header->e_entry;
     int ret = CallApp(argc.value, argv, 3 << 3 | 3, entry_addr,
                       stack_frame_address.value + 4096 - 8,
@@ -630,8 +662,7 @@ Error Terminal::ExecuteFile(const fat::DirectoryEntry &file_entry, char *command
     {
         return err;
     }
-
-    return MAKE_ERROR(Error::kSuccess);
+    return FreePML4(task);
 }
 
 void Terminal::Print(char c)

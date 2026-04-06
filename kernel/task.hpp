@@ -16,6 +16,7 @@
 
 #include "error.hpp"
 #include "message.hpp"
+#include "paging.hpp"
 
 struct TaskContext
 {
