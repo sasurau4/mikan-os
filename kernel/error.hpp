@@ -33,6 +33,7 @@ public:
         kNoSuchTask,
         kInvalidFormat,
         kFrameTooSmall,
+        kInvalidFile,
         kLastOfCode, // This should be the last code in the enum
     };
 
@@ -91,6 +92,7 @@ private:
         "kNoSuchTask",
         "kInvalidFormat",
         "kFrameTooSmall",
+        "kInvalidFile",
     };
     static_assert(Error::Code::kLastOfCode == code_names_.size());
 
