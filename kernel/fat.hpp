@@ -109,6 +109,15 @@ namespace fat
      */
     void ReadName(const DirectoryEntry &entry, char *base, char *ext);
 
+    /**
+     * @brief copy the 8.3 name from a directory entry to dest
+     * If the extension is null, "<base>", otherwise "<base>.<ext>" will be copied to dest
+     *
+     * @param entry Directory entry
+     * @param dest Buffer to store the formatted name
+     */
+    void FormatName(const DirectoryEntry &entry, char *dest);
+
     static const unsigned long kEndOfClusterchain = 0x0ffffffflu;
 
     /**
@@ -125,9 +134,13 @@ namespace fat
      *
      * @param name File name (8+3 format, e.g., "FILE    TXT", case insensitive)
      * @param directory_cluster Cluster number of the directory to search in (0 for root directory)
-     * @return Pointer to the DirectoryEntry if found, nullptr otherwise
+     * @return The combination about the entry of the file or entry of the directory and flag in tail slash
+     *   If the file or directory is not found, return nullptr.
+     *   If the entry ends with a slash, return true.
+     *   If the middle of the path entry is a file, return entry and true.
      */
-    DirectoryEntry *FindFile(const char *name, unsigned long directory_cluster = 0);
+    std::pair<DirectoryEntry *, bool>
+    FindFile(const char *name, unsigned long directory_cluster = 0);
 
     bool NameIsEqual(const DirectoryEntry &entry, const char *name);
 
