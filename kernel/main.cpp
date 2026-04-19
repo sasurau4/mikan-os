@@ -165,8 +165,6 @@ KernelMainNewStack(const FrameBufferConfig &frame_buffer_config_ref,
     InitializeTask();
     Task &main_task = task_manager->CurrentTask();
 
-    terminals = new std::map<uint64_t, Terminal *>;
-
     usb::xhci::Initialize();
     InitializeKeyboard();
     InitializeMouse();
