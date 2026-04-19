@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <cstddef>
 
+#include "error.hpp"
 #include "file.hpp"
 
 namespace fat
@@ -156,6 +157,42 @@ namespace fat
      */
     size_t LoadFile(void *buf, size_t len, const DirectoryEntry &entry);
 
+    bool IsEndOfClusterchain(unsigned long cluster);
+
+    uint32_t *GetFAT();
+
+    /**
+     * @brief Extend the cluster chain by n clusters
+     *
+     * @param eoc_cluster The last cluster of the current chain (kEndOfClusterchain if the chain is empty)
+     * @param n Number of clusters to extend
+     * @return The first cluster number of the extended part, or kEndOfClusterchain
+     */
+    unsigned long ExtendCluster(unsigned long eoc_cluster, size_t n);
+
+    /**
+     * @brief Allocate a directory entry in the specified directory
+     *
+     * @param dir_cluster Cluster number of the directory to allocate the entry in
+     * @return Pointer to the allocated directory entry, or nullptr if allocation failed
+     */
+    DirectoryEntry *AllocateEntry(unsigned long dir_cluster);
+
+    /**
+     * @brief Set the name of a directory entry
+     *
+     * @param entry Directory entry to set the name for
+     * @param name File name, connected by a dot if there is an extension (e.g., "FILE.TXT"), case insensitive
+     */
+    void SetFileName(DirectoryEntry &entry, const char *name);
+
+    /**
+     * @brief Create a file with the specified path
+     *
+     * @param path Path of the file to create
+     * @return Directory entry of the created file, or error if creation failed
+     */
+    WithError<DirectoryEntry *> CreateFile(const char *path);
     class FileDescriptor : public ::FileDescriptor
     {
     public:
