@@ -169,6 +169,7 @@ KernelMainNewStack(const FrameBufferConfig &frame_buffer_config_ref,
     InitializeKeyboard();
     InitializeMouse();
 
+    app_loads = new std::map<fat::DirectoryEntry *, AppLoadInfo>();
     task_manager->NewTask()
         .InitContext(TaskTerminal, 0)
         .Wakeup();
