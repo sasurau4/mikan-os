@@ -47,6 +47,12 @@ private:
     size_t id_;
 };
 
+struct MemoryStat
+{
+    size_t allocated_frames;
+    size_t total_frames;
+};
+
 static const FrameID kNullFrame{std::numeric_limits<size_t>::max()};
 
 /** @brief Class for managing memory by unit using bitmap
@@ -84,6 +90,11 @@ public:
      * @param range_end The last frame ID of manageable memory range, the next frame of the last frame
      */
     void SetMemoryRange(FrameID range_begin, FrameID range_end);
+
+    /**
+     * @brief Get the current memory usage status
+     */
+    MemoryStat Stat() const;
 
 private:
     std::array<MapLineType, kFrameCount / kBitsPerMapLine> alloc_map_;
