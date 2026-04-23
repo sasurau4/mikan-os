@@ -540,23 +540,26 @@ void Terminal::ExecuteLine()
         }
         else
         {
-            auto cluster = file_entry->FirstCluster();
-            auto remain_bytes = file_entry->file_size;
+            fat::FileDescriptor fd{*file_entry};
+            char u8buf[4];
 
             DrawCursor(false);
 
-            while (cluster != 0 && cluster != fat::kEndOfClusterchain)
+            while (true)
             {
-                char *p = fat::GetSectorByCluster<char>(cluster);
-
-                int i = 0;
-                for (; i < fat::bytes_per_cluster && i < remain_bytes; ++i)
+                if (fd.Read(&u8buf[0], 1) != 1)
                 {
-                    Print(*p);
-                    ++p;
+                    break;
                 }
-                remain_bytes -= i;
-                cluster = fat::NextCluster(cluster);
+                const int u8_remain = CountUTF8Size(u8buf[0]) - 1;
+
+                if (u8_remain > 0 && fd.Read(&u8buf[1], u8_remain) != u8_remain)
+                {
+                    break;
+                }
+
+                const auto [u32, u8_next] = ConvertUTF8To32(u8buf);
+                Print(u32 ? u32 : U'□');
             }
             DrawCursor(true);
         }
@@ -671,8 +674,13 @@ Error Terminal::ExecuteFile(fat::DirectoryEntry &file_entry, char *command, char
     return FreePML4(task);
 }
 
-void Terminal::Print(char c)
+void Terminal::Print(char32_t c)
 {
+    if (!show_window_)
+    {
+        return;
+    }
+
     auto newline = [this]()
     {
         cursor_.x = 0;
@@ -686,24 +694,27 @@ void Terminal::Print(char c)
         }
     };
 
-    if (c == '\n')
+    if (c == U'\n')
     {
         newline();
     }
+    else if (IsHankaku(c))
+    {
+        if (cursor_.x == kColumns)
+        {
+            newline();
+        }
+        WriteUnicode(*window_->Writer(), CalcCursorPos(), c, {255, 255, 255});
+        ++cursor_.x;
+    }
     else
     {
-        if (show_window_)
-        {
-            WriteAscii(*window_->Writer(), CalcCursorPos(), c, {255, 255, 255});
-        }
         if (cursor_.x == kColumns - 1)
         {
             newline();
         }
-        else
-        {
-            ++cursor_.x;
-        }
+        WriteUnicode(*window_->Writer(), CalcCursorPos(), c, {255, 255, 255});
+        cursor_.x += 2;
     }
 }
 
@@ -712,21 +723,14 @@ void Terminal::Print(const char *s, std::optional<size_t> len)
     const auto cursor_before = CalcCursorPos();
     DrawCursor(false);
 
-    if (len)
+    size_t i = 0;
+    const size_t len_ = len ? *len : std::numeric_limits<size_t>::max();
+
+    while (s[i] && i < len_)
     {
-        for (size_t i = 0; i < *len; ++i)
-        {
-            Print(*s);
-            ++s;
-        }
-    }
-    else
-    {
-        while (*s)
-        {
-            Print(*s);
-            ++s;
-        }
+        const auto [u32, bytes] = ConvertUTF8To32(&s[i]);
+        Print(u32);
+        i += bytes;
     }
 
     DrawCursor(true);
