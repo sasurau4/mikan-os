@@ -145,6 +145,7 @@ KernelMainNewStack(const FrameBufferConfig &frame_buffer_config_ref,
     InitializeInterrupt();
 
     fat::Initialize(volume_image);
+    InitializeFont();
     InitializePCI();
 
     InitializeLayer();

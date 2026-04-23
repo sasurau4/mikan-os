@@ -36,6 +36,7 @@ public:
         kInvalidFile,
         kIsDirectory,
         kNoSuchEntry,
+        kFreeTypeError,
         kLastOfCode, // This should be the last code in the enum
     };
 
@@ -97,6 +98,7 @@ private:
         "kInvalidFile",
         "kIsDirectory",
         "kNoSuchEntry",
+        "kFreeTypeError",
     };
     static_assert(Error::Code::kLastOfCode == code_names_.size());
 
