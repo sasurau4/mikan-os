@@ -4,18 +4,18 @@
 
 extern "C" void main(int argc, char **argv)
 {
-    if (argc < 3)
+    if (argc < 2)
     {
-        printf("Usage %s <pattern> <file>\n", argv[0]);
+        fprintf(stderr, "Usage %s <pattern> <file>\n", argv[0]);
         exit(1);
     }
 
     std::regex pattern{argv[1]};
 
-    FILE *fp = fopen(argv[2], "r");
-    if (fp == nullptr)
+    FILE *fp = stdin;
+    if (argc >= 3 && (fp = fopen(argv[2], "r")) == nullptr)
     {
-        printf("failed to open: %s\n", argv[2]);
+        fprintf(stderr, "failed to open: %s\n", argv[2]);
         exit(1);
     }
 
