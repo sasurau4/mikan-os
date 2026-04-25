@@ -28,6 +28,12 @@ extern "C" void main(int argc, char **argv)
         {
             break;
         }
+        else if (events[0].type == AppEvent::kMouseMove ||
+                 events[0].type == AppEvent::kMouseButton ||
+                 events[0].type == AppEvent::kKeyPush)
+        {
+            // ignore
+        }
         else
         {
             printf("unknown event: %d\n", events[0].type);
